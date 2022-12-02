@@ -1,10 +1,10 @@
 ﻿namespace Wapc;
 
-using HostCallback 
-    = Func<ulong, string, string, string, byte[], byte[]>;
 
 public class WapcHost 
 {
+    public delegate byte[] Callback(ulong id, string bd, string ns, string op, byte[] payload);
+
     // Atomic? wapchost.rs:38
     private static ulong ModuleCount = 0;
 
@@ -12,11 +12,11 @@ public class WapcHost
 
     ModuleState State { get; set; }
 
-    public WapcHost(IEngineProvider engine, HostCallback hostcb)
+    public WapcHost(IEngineProvider engine, Callback hostcb)
     {
         var id = ++ModuleCount;
         Engine = engine;
-        State = new ModuleState(hostcb, id);
+        State = new ModuleState(hostcb);
 
         Engine.Init(State);
     }

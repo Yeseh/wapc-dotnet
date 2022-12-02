@@ -18,7 +18,7 @@ public static class WapcConstants
     public const string GUEST_ERROR = "__guest_error";
 
     public const string WAPC_INIT = "wapc_init";
-    public const string START = "_start";
+    public const string DOTNET_START = "_start";
     
-    public static readonly string[] REQUIRED_STARTS = { START, WAPC_INIT };
+    public static readonly string[] REQUIRED_STARTS = { WAPC_INIT, /* DOTNET_START */ };
 }

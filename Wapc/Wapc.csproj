@@ -7,4 +7,9 @@
     <TieredPGO>true</TieredPGO>
   </PropertyGroup>
 
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\wasmtime-dotnet\src\Wasmtime.csproj" />
+  </ItemGroup>
+
 </Project>

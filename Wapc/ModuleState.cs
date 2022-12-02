@@ -1,11 +1,6 @@
 ﻿namespace Wapc;
 
-using HostCallback 
-    = Func<ulong, string, string, string, byte[], byte[]>;
-
-// TODO: Look into RwLocks for these properties
-//       This is not threadsafe at all :)
-public class ModuleState : IModuleState
+public class ModuleState
 {
     private static readonly ReaderWriterLock Lock = new();
 
@@ -19,21 +14,28 @@ public class ModuleState : IModuleState
 
     private string? GuestError = string.Empty;
 
-    private HostCallback? HostCallback = null!;
+    private WapcHost.Callback? HostCallback = null!;
 
     public ulong Id;
 
-    public ModuleState(HostCallback? hostcb, ulong id)
+    public ModuleState(WapcHost.Callback? hostcb = null)
     {
         HostCallback = hostcb;
-        Id = id;
     }
 
-    public Invocation? GetGuestRequest() => ReadState(m => m.GuestRequest);
-    public byte[] GetGuestResponse() =>  ReadState(m => m.GuestResponse);
-    public byte[] GetHostResponse() => ReadState(m => m.HostResponse);
-    public string? GetHostError() => ReadState(m => m.HostError);
-    public string? GetGuestError() => ReadState(m => m.GuestError);
+    public Invocation? GetGuestRequest() 
+        => ReadState(m => m.GuestRequest);
+
+    public byte[] GetGuestResponse() 
+        => ReadState(m => m.GuestResponse);
+    
+    public byte[] GetHostResponse() 
+        => ReadState(m => m.HostResponse);
+    public string GetHostError() 
+        => ReadState(m => m.HostError ?? string.Empty);
+
+    public string GetGuestError() 
+        => ReadState(m => m.GuestError ?? string.Empty);
 
     public void SetGuestError(string err)
         => WriteState(m => Interlocked.Exchange(ref GuestError, err));
@@ -42,7 +44,7 @@ public class ModuleState : IModuleState
     public void SetGuestResponse(byte[] response)
         => WriteState(m => Interlocked.Exchange(ref GuestResponse, response));
 
-    public void HostCall(
+    public int Call(
         string binding,
         string ns,
         string operation,
@@ -64,8 +66,7 @@ public class ModuleState : IModuleState
             var result = HostCallback.Invoke(Id, binding, ns, operation, payload);
             if (result != null)
             {
-                // TODO: This is closing over the result param, keep an eye out
-                //       for allocations;
+                // NOTE: This is capturing 'result', keep an eye for allocations;
                 WriteState(m =>
                 {
                     Interlocked.Exchange(ref HostResponse, result);
@@ -78,10 +79,14 @@ public class ModuleState : IModuleState
                     Interlocked.Exchange(ref HostError, $"HostCb failed");
                 });
             }
-        }
+
+            return 0;
+       }
         catch (Exception ex)
         {
-            throw;
+            // TODO: Handle error
+            Console.WriteLine(ex);
+            return 1;
         }
     }
 
@@ -114,7 +119,10 @@ public class ModuleState : IModuleState
             }
             finally
             {
-                Lock.ReleaseReaderLock();
+                if (Lock.IsReaderLockHeld)
+                {
+                    Lock.ReleaseReaderLock();
+                }
             }
         }
         catch (ApplicationException ex)
@@ -135,7 +143,10 @@ public class ModuleState : IModuleState
             }
             finally
             {
-                Lock.ReleaseWriterLock();
+                if (Lock.IsWriterLockHeld)
+                {
+                    Lock.ReleaseWriterLock();
+                }
             }
         }
         catch (ApplicationException ex)
