@@ -10,4 +10,13 @@
     <PackageReference Include="Wasi.SDK" Version="0.1.2-preview.10061" />
   </ItemGroup>
 
+  <Target Name="PackTaskDependencies" BeforeTargets="GenerateNuspec">
+
+    <ItemGroup>
+      <_PackageFiles Include="build\**" BuildAction="Content" PackagePath="build" />
+      <_PackageFiles Include="native\**" BuildAction="Content" PackagePath="native" />
+    </ItemGroup>
+
+  </Target>
+
 </Project>
