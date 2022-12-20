@@ -39,8 +39,10 @@ public class ModuleState
 
     public void SetGuestError(string err)
         => WriteState(m => Interlocked.Exchange(ref GuestError, err));
+        
     public void SetHostError(string err)
         => WriteState(m => Interlocked.Exchange(ref HostError, err));
+
     public void SetGuestResponse(byte[] response)
         => WriteState(m => Interlocked.Exchange(ref GuestResponse, response));
 

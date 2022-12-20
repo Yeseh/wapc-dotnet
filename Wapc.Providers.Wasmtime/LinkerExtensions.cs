@@ -7,7 +7,6 @@ namespace Wapc.Providers.Wasmtime;
 
 internal static class LinkerExtensions
 {
-    // TODO: Closing over host, does that work?
     public static void ConfigureWapc(this Linker linker)
     {
         linker.DefineFunction(
